@@ -1,9 +1,13 @@
 [package]
 name = "multi-readers"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 description = "multi readers"
-keywords = ["readers"]
-
+keywords = ["readers", "multiple", "multi", "bytes-reader"]
+repository = "https://github.com/Pesju13/multi-readers.git"
 [dependencies]
+
+
+
+
