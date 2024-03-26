@@ -1,7 +1,6 @@
-
 #[forbid(missing_docs)]
 mod reader;
-pub use reader::{MultiReaders, BytesReader};
+pub use reader::{MultiReaders, BytesReader, SliceReader};
 
 
 /// Join multiple readers into a single
