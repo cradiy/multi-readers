@@ -108,19 +108,19 @@ impl<'iter, 'life, 'func> MultiReaders<'iter, 'life, 'func> {
         }
     }
     /// Process the bytes read using the given function
-    /// 
+    ///
     /// # Examples
-    /// 
-    /// ```
+    ///
+    /// ```rust
     /// use std::io::Read;
     /// use multi_readers::*;
-    /// 
+    ///
     /// let bytes = b"01234567";
     /// let mut reader = join_readers!(SliceReader::new(bytes));
     /// reader.set_process_func(|slice| {
     ///     for b in slice {
     ///         *b += 1;
-    ///     } 
+    ///     }
     /// });
     /// let mut buf = [0; 8];
     /// let len = reader.read(&mut buf).unwrap();
