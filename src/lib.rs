@@ -1,19 +1,19 @@
-#[forbid(missing_docs)]
+pub mod read;
+// #[forbid(missing_docs)]
 mod reader;
-pub use reader::{MultiReaders, BytesReader, SliceReader};
-
-
+pub use reader::{BytesReader, MultiReaders, SliceReader};
+pub use read::ExRead;
 /// Join multiple readers into a single
-/// 
+///
 /// # Example
 /// ```no_run
 /// use multi_readers::{join_readers, BytesReader};
 /// use std::fs::File;
-/// 
+///
 /// let f = File::open("path").unwrap();
 /// let bytes = vec![1, 2, 3, 4];
 /// let br = BytesReader::new(bytes);
-/// 
+///
 /// let mut reader = join_readers!(f, br);
 /// ```
 #[macro_export]
