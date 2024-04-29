@@ -1,8 +1,11 @@
 pub mod read;
-// #[forbid(missing_docs)]
 mod reader;
-pub use reader::{BytesReader, MultiReaders, SliceReader};
+#[cfg(feature = "async")]
+mod _async;
+#[cfg(feature = "async")]
+pub use _async::AsyncMultiReaders;
 pub use read::ExRead;
+pub use reader::{BytesReader, MultiReaders, SliceReader};
 /// Join multiple readers into a single
 ///
 /// # Example
@@ -34,5 +37,14 @@ macro_rules! join_paths_to_readers {
                 $crate::MultiReaders::from_iter(readers.into_iter())
             })
         }
+    };
+}
+
+#[cfg(feature = "async")]
+/// Join multiple async readers into a single
+#[macro_export]
+macro_rules! join_async_readers {
+    ($($r:expr), +) => {
+        $crate::AsyncMultiReaders::from_iter(vec![$(Box::new($r) as Box<dyn tokio::io::AsyncRead + Unpin>, )+].into_iter())
     };
 }
