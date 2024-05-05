@@ -40,3 +40,32 @@ fn main() -> std::io::Result<()> {
 
 
 ```
+
+# Async
+## Dependencies
+```toml
+tokio = {version = "*", features = ["full"]}
+multi-readers = {version = "*", features = ["async"]}
+```
+
+## Example
+```rust
+use multi_readers::*;
+use tokio::io::AsyncReadExt;
+#[tokio::main]
+async fn main() {
+    let slice1 = SliceReader::new(b"12345");
+    let slice2 = SliceReader::new(b"2346");
+    let mut reader = join_async_readers!(slice1, slice2);
+    let mut buf = [0; 4];
+    let len = reader.read(&mut buf).await.unwrap();
+    assert_eq!(&buf[..len], b"1234");
+    let len = reader.read(&mut buf).await.unwrap();
+    assert_eq!(&buf[..len], b"5234");
+    let len = reader.read(&mut buf).await.unwrap();
+    assert_eq!(&buf[..len], b"6");
+}
+```
+
+
+
