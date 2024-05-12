@@ -1,28 +1,23 @@
-# Wrapper for multiple readers
+<p>
+    <a href="https://crates.io/crates/multi-readers">
+    	<img alt="Crate Info" src="https://img.shields.io/crates/v/multi-readers.svg"/>
+    </a>
+</p>
 
-`MultiReader` is lazy. It does nothing if you don't use.
+# Multiple Readers
 
-## Usage
-- `SliceReader` and `BytesReader`
-```rust
-use multi_readers::{BytesReader, SliceReader, join_readers};
-use std::io::Read;
+`multiple-readers ` is a Rust library aimed at simplifying the process of combining multiple types that implement the [std::io::Read](https://doc.rust-lang.org/stable/std/io/trait.Read.html)  trait into a unified reader.
 
-fn main() -> std::io::Result<()> {
-    let slice = SliceReader::new(b"hello");
-    let bytes = BytesReader::new("world".as_bytes().to_vec()); 
-    let mut reader = join_readers!(slice, bytes);
-    let mut buf = [0; 5];
-    let len = reader.read(&mut buf)?;
-    assert_eq!(b"hello", &buf[..len]);
-    let len = reader.read(&mut buf)?;
-    assert_eq!(b"world", &buf[..len]);
-    Ok(())
-}
-```
+# Features
 
-## Usage
-- Merge any type that implements the trait `std::io::Read`
+- Combines multiple types that implement the [std::io::Read](https://doc.rust-lang.org/stable/std/io/trait.Read.html) trait into a unified reader.
+- Provides [SliceReader](https://docs.rs/multi-readers/0.1.5/multi_readers/struct.SliceReader.html) and [BytesReader](https://docs.rs/multi-readers/0.1.5/multi_readers/struct.BytesReader.html) types, which respectively wrap `&[u8]` and `Vec<u8>`, implementing the [std::io::Read](https://doc.rust-lang.org/stable/std/io/trait.Read.html) and
+  [tokio::io::AsyncRead](https://docs.rs/tokio/1.37.0/tokio/io/trait.AsyncRead.html) trait.
+- Can read from data sources sequentially until all data sources are exhausted.
+- Supports [tokio](https://crates.io/crates/tokio) (` Unstable` )
+
+# Example
+
 ```rust
 use multi_readers::{BytesReader, SliceReader, join_readers};
 use std::{fs::File, io::Read};
@@ -38,17 +33,20 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-
 ```
 
-# Async
-## Dependencies
+
+
+# Async Example
+
+- dependencies
+
 ```toml
-tokio = {version = "*", features = ["full"]}
+tokio = { version = "*", features = ["full"]}
 multi-readers = {version = "*", features = ["async"]}
 ```
 
-## Example
+
 ```rust
 use multi_readers::*;
 use tokio::io::AsyncReadExt;
@@ -66,6 +64,3 @@ async fn main() {
     assert_eq!(&buf[..len], b"6");
 }
 ```
-
-
-
