@@ -11,8 +11,8 @@
 # Features
 
 - Combines multiple types that implement the [std::io::Read](https://doc.rust-lang.org/stable/std/io/trait.Read.html) trait into a unified reader.
-- Provides [SliceReader](https://docs.rs/multi-readers/0.1.5/multi_readers/struct.SliceReader.html) and [BytesReader](https://docs.rs/multi-readers/0.1.5/multi_readers/struct.BytesReader.html) types, which respectively wrap `&[u8]` and `Vec<u8>`, implementing the [std::io::Read](https://doc.rust-lang.org/stable/std/io/trait.Read.html) and
-  [tokio::io::AsyncRead](https://docs.rs/tokio/1.37.0/tokio/io/trait.AsyncRead.html) trait.
+- Provides [SliceReader](https://docs.rs/multi-readers/*/multi_readers/struct.SliceReader.html) and [BytesReader](https://docs.rs/multi-readers/*/multi_readers/struct.BytesReader.html) types, which respectively wrap `&[u8]` and `Vec<u8>`, implementing the [std::io::Read](https://doc.rust-lang.org/stable/std/io/trait.Read.html) and
+  [tokio::io::AsyncRead](https://docs.rs/tokio/*/tokio/io/trait.AsyncRead.html) trait.
 - Can read from data sources sequentially until all data sources are exhausted.
 - Supports [tokio](https://crates.io/crates/tokio) (` Unstable` )
 
