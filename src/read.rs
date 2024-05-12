@@ -72,12 +72,12 @@ macro_rules! read {
     }};
 }
 
-fn read_to_vec<R: Read>(r: &mut R, size: usize, buf: &mut Vec<u8>, exact: bool) -> Result<()> {
+fn read_to_vec<R: Read>(r: &mut R, size: usize, vec: &mut Vec<u8>, exact: bool) -> Result<()> {
     match size {
         0 => (),
-        1..=32 => read!(1, r, size, buf, exact),
-        33..=1024 => read!(32, r, size, buf, exact),
-        _ => read!(1024, r, size, buf, exact),
+        1..=31 => read!(1, r, size, vec, exact),
+        32..=1023 => read!(32, r, size, vec, exact),
+        _ => read!(1024, r, size, vec, exact),
     }
     Ok(())
 }
