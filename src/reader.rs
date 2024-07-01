@@ -106,31 +106,6 @@ impl<'iter, 'life, 'func> MultiReaders<'iter, 'life, 'func> {
             process_func: None,
         }
     }
-    /// Process the bytes read using the given function
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use std::io::Read;
-    /// use multi_readers::*;
-    ///
-    /// let bytes = b"01234567";
-    /// let bytes1 = b"abcd";
-    /// let mut reader = join_readers!(SliceReader::new(bytes), SliceReader::new(bytes1));
-    /// reader.set_process_func(|slice| {
-    ///     for b in slice {
-    ///         *b += 1;
-    ///     }
-    /// });
-    /// let mut buf = [0; 7];
-    /// let len = reader.read(&mut buf).unwrap();
-    /// assert_eq!(b"1234567", &buf[..len]);
-    /// let len = reader.read(&mut buf).unwrap();
-    /// assert_eq!(b"8bcde", &buf[..len]);
-    /// ```
-    pub fn set_process_func(&mut self, func: impl Fn(&mut [u8]) + 'func) {
-        self.process_func = Some(Box::new(func))
-    }
 }
 
 impl<'iter, 'life, 'func> Read for MultiReaders<'iter, 'life, 'func> {
