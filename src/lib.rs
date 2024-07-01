@@ -1,11 +1,11 @@
-pub mod read;
+mod read;
 mod reader;
 #[cfg(feature = "async")]
-mod _async;
+mod asynchronous;
 #[cfg(feature = "async")]
-pub use _async::AsyncMultiReaders;
-pub use read::ExRead;
+pub use asynchronous::AsyncMultiReaders;
 pub use reader::{BytesReader, MultiReaders, SliceReader};
+pub use read::read;
 /// Join multiple readers into a single
 ///
 /// # Example
