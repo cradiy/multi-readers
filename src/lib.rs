@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 mod read;
 mod reader;
 #[cfg(feature = "async")]
@@ -5,7 +6,6 @@ mod asynchronous;
 #[cfg(feature = "async")]
 pub use asynchronous::AsyncMultiReaders;
 pub use reader::{BytesReader, MultiReaders, SliceReader};
-pub use read::read;
 /// Join multiple readers into a single
 ///
 /// # Example
