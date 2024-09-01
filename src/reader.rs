@@ -1,4 +1,7 @@
-use std::io::Read;
+use std::{
+    io::{Read, Seek},
+    ops::Deref,
+};
 
 /// A bytes wrapper and implements trait [`Read`][std::io::Read]
 /// # Usage
@@ -26,7 +29,7 @@ impl BytesReader {
     pub(crate) fn as_slice_reader(&self) -> SliceReader<'_> {
         SliceReader {
             buf: &self.buf,
-            pos: self.pos
+            pos: self.pos,
         }
     }
 }
@@ -38,9 +41,14 @@ impl Read for BytesReader {
         Ok(len)
     }
 }
-
-
-
+impl Seek for BytesReader {
+    fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> {
+        let mut slice_reader = self.as_slice_reader();
+        let len = slice_reader.seek(pos)?;
+        self.pos = slice_reader.pos;
+        Ok(len)
+    }
+}
 
 /// A slice wrapper and implements trait [`Read`][std::io::Read]
 /// # Usage
@@ -61,10 +69,57 @@ pub struct SliceReader<'a> {
     pub(crate) pos: usize,
 }
 
+impl<'a> Deref for SliceReader<'a> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.buf
+    }
+}
+
+impl<'a> Seek for SliceReader<'a> {
+    fn seek(&mut self, pos: std::io::SeekFrom) -> std::io::Result<u64> {
+        match pos {
+            std::io::SeekFrom::Start(s) => {
+                let pos = s.min(self.buf.len() as u64);
+                self.pos = pos as usize;
+                Ok(pos)
+            }
+            std::io::SeekFrom::End(e) => {
+                let pos = if e >= 0 {
+                    self.buf.len() as u64
+                } else {
+                    let pos = self.buf.len() as i64 + e;
+                    0.max(pos) as u64
+                };
+                self.pos = pos as usize;
+                Ok(pos)
+            }
+            std::io::SeekFrom::Current(c) => {
+                let len = self.buf.len() as i64;
+                let pos = 0.max(len + c).min(len) as u64;
+                self.pos = pos as usize;
+                Ok(pos)
+            }
+        }
+    }
+}
+
 impl<'a> SliceReader<'a> {
     /// Create a new `SliceReader` with slice
     pub fn new(slice: &'a [u8]) -> SliceReader {
         Self { buf: slice, pos: 0 }
+    }
+}
+impl<'a> From<&'a str> for SliceReader<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::new(value.as_bytes())
+    }
+}
+
+impl<'a> From<&'a [u8]> for SliceReader<'a> {
+    fn from(value: &'a [u8]) -> Self {
+        Self::new(value)
     }
 }
 impl<'a> Read for SliceReader<'a> {
@@ -84,49 +139,3 @@ impl<'a> Read for SliceReader<'a> {
         }
     }
 }
-
-pub(crate) type HandleFunc<'func> = Option<Box<dyn Fn(&mut [u8]) + 'func>>;
-
-/// Wrapper for multiple readers
-///
-/// `MultiReader` is lazy. It does nothing if you don't use.
-pub struct MultiReaders<'iter, 'life, 'func> {
-    current: Option<Box<dyn Read + 'life>>,
-    iter: Box<dyn Iterator<Item = Box<dyn Read + 'life>> + 'iter>,
-    process_func: HandleFunc<'func>,
-}
-
-#[allow(clippy::should_implement_trait)]
-impl<'iter, 'life, 'func> MultiReaders<'iter, 'life, 'func> {
-    /// Create a new `MultiReaders` from an iterator.
-    pub fn from_iter(iter: impl Iterator<Item = Box<dyn Read + 'life>> + 'iter) -> Self {
-        Self {
-            current: None,
-            iter: Box::new(iter),
-            process_func: None,
-        }
-    }
-}
-
-impl<'iter, 'life, 'func> Read for MultiReaders<'iter, 'life, 'func> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        if self.current.is_none() {
-            self.current = self.iter.next();
-        }
-        match &mut self.current {
-            Some(r) => {
-                let mut len = r.read(buf)?;
-                if let Some(f) = &self.process_func {
-                    f(&mut buf[..len]);
-                }
-                if len < buf.len() {
-                    self.current = self.iter.next();
-                    len += self.read(&mut buf[len..])?;
-                }
-                Ok(len)
-            }
-            None => Ok(0),
-        }
-    }
-}
-
