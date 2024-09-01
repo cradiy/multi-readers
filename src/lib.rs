@@ -1,3 +1,4 @@
+mod multi;
 #[allow(dead_code)]
 mod read;
 mod reader;
@@ -5,7 +6,8 @@ mod reader;
 mod asynchronous;
 #[cfg(feature = "async")]
 pub use asynchronous::AsyncMultiReaders;
-pub use reader::{BytesReader, MultiReaders, SliceReader};
+pub use reader::{BytesReader, SliceReader};
+pub use multi::*;
 /// Join multiple readers into a single
 ///
 /// # Example
@@ -27,6 +29,12 @@ macro_rules! join_readers {
 }
 
 #[macro_export]
+macro_rules! join_seek_readers {
+    ($($r:expr), +) => {
+        $crate::MultiSeekReaders::new(vec![$(Box::new($r) as Box<dyn $crate::SeekRead>, )+])
+    };
+}
+#[macro_export]
 macro_rules! join_paths_to_readers {
     ($($path:expr), +) => {
         {
@@ -38,6 +46,13 @@ macro_rules! join_paths_to_readers {
             })
         }
     };
+}
+
+pub trait SeekRead: std::io::Read + std::io::Seek {
+    
+}
+impl<T: std::io::Read + std::io::Seek> SeekRead for T {
+    
 }
 
 #[cfg(feature = "async")]
