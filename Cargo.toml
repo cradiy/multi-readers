@@ -1,10 +1,10 @@
 [package]
 name = "multi-readers"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "MIT"
 description = "Combining multiple readers"
-keywords = ["readers", "multiple", "async", "bytes-reader"]
+keywords = ["readers", "multiple", "async", "seek"]
 repository = "https://github.com/Pesju13/multi-readers.git"
 [dependencies]
 
