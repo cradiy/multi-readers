@@ -1,4 +1,3 @@
-use crate::{BytesReader, SliceReader};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, ReadBuf};
@@ -14,34 +13,6 @@ macro_rules! ready {
             return Poll::Ready(Ok(()));
         }
     };
-}
-impl AsyncRead for BytesReader {
-    fn poll_read(
-        self: Pin<&mut Self>,
-        _cx: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<std::io::Result<()>> {
-        let mut slice_reader = self.as_slice_reader();
-        let result = tokio::io::AsyncRead::poll_read(Pin::new(&mut slice_reader), _cx, buf);
-        self.get_mut().pos = slice_reader.pos;
-        result
-    }
-}
-impl<'a> AsyncRead for SliceReader<'a> {
-    fn poll_read(
-        self: Pin<&mut Self>,
-        _cx: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<std::io::Result<()>> {
-        ready!(self.pos, self.buf.len());
-        ready!(buf.remaining());
-        let amt = std::cmp::min(self.buf.len() - self.pos, buf.remaining());
-        let slice = &self.buf[self.pos..self.pos + amt];
-        assert!(slice.len() <= buf.remaining());
-        buf.put_slice(slice);
-        self.get_mut().pos += amt;
-        Poll::Ready(Ok(()))
-    }
 }
 
 pub struct AsyncMultiReaders<'iter, 'life> {
