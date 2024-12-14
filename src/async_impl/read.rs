@@ -15,18 +15,16 @@ macro_rules! ready {
     };
 }
 
-pub struct AsyncMultiReaders<'iter, 'life> {
-    current: Option<Box<dyn AsyncRead + Unpin + 'life>>,
-    iter: Box<dyn Iterator<Item = Box<dyn AsyncRead + Unpin + 'life>> + 'iter>,
+pub struct AsyncMultiReaders {
+    current: Option<Box<dyn AsyncRead + Unpin>>,
+    iter: Box<dyn Iterator<Item = Box<dyn AsyncRead + Unpin>>>,
     buf: Vec<u8>,
     filled: usize,
 }
 
-impl<'iter, 'life> AsyncMultiReaders<'iter, 'life> {
+impl AsyncMultiReaders {
     #[allow(clippy::should_implement_trait)]
-    pub fn from_iter(
-        iter: impl Iterator<Item = Box<dyn AsyncRead + Unpin + 'life>> + 'iter,
-    ) -> Self {
+    pub fn from_iter(iter: impl Iterator<Item = Box<dyn AsyncRead + Unpin>> + 'static) -> Self {
         Self {
             current: None,
             iter: Box::new(iter),
@@ -43,7 +41,7 @@ impl<'iter, 'life> AsyncMultiReaders<'iter, 'life> {
     }
 }
 
-impl<'iter, 'life> AsyncRead for AsyncMultiReaders<'iter, 'life> {
+impl AsyncRead for AsyncMultiReaders {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,

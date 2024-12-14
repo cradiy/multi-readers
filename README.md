@@ -17,16 +17,24 @@
 # Example
 
 ```rust
-use multi_readers::join_readers;
 use std::io::{Cursor, Read};
-fn main() -> std::io::Result<()> {
 
-    let slice = Cursor::new(b"First-");
-    let bytes = Cursor::new(b"Second-");
-    let mut reader = join_readers!(slice, bytes);
+use multi_readers::wrap;
+
+fn main() -> std::io::Result<()> {
+    // Same type
+    let r1 = Cursor::new("Hello, ");
+    let r2 = Cursor::new("World!");
+    let mut readers = wrap!(r1.clone(), r2.clone());
+    let mut hello_world = String::new();
+    readers.read_to_string(&mut hello_world)?;
+    // Different types
+    let r3 = Cursor::new(b" Rust!");
+    assert_eq!(hello_world.as_str(), "Hello, World!");
+    let mut readers = wrap!(dyn Read, r1, r2, r3);
     let mut buf = String::new();
-    reader.read_to_string(&mut buf)?;
-    assert_eq!(buf.as_str(), "First-Second-");
+    readers.read_to_string(&mut buf)?;
+    assert_eq!(buf.as_str(), "Hello, World! Rust!");
     Ok(())
 }
 

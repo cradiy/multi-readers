@@ -8,8 +8,7 @@ keywords = ["readers", "multiple", "async", "seek"]
 repository = "https://github.com/cradiy/multi-readers.git"
 [dependencies]
 
-tokio = { version = "1.41.0", optional = true }
-# tokio = { version = "1.41.0", features = ["full"] }
-
+# tokio = { version = "1.42.0", features = ["full"] }
+tokio = { version = "1.42.0", optional = true }
 [features]
 async = ["tokio"]

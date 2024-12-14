@@ -1,12 +1,8 @@
-mod seek;
-mod read;
+mod _impl;
+pub mod lazy_file;
+pub use _impl::MultiReaders;
 #[cfg(feature = "async")]
 mod async_impl;
-mod join;
+mod wrap;
 #[cfg(feature = "async")]
 pub use async_impl::AsyncMultiReaders;
-pub use read::MultiReaders;
-pub use seek::{MultiSeekReaders, SeekRead};
-
-
-
