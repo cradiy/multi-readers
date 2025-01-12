@@ -2,6 +2,8 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, ReadBuf};
 
+use crate::MultiReaders;
+
 macro_rules! ready {
     ($n:expr) => {
         if ($n == 0) {
@@ -15,67 +17,42 @@ macro_rules! ready {
     };
 }
 
-pub struct AsyncMultiReaders {
-    current: Option<Box<dyn AsyncRead + Unpin>>,
-    iter: Box<dyn Iterator<Item = Box<dyn AsyncRead + Unpin>>>,
-    buf: Vec<u8>,
-    filled: usize,
-}
-
-impl AsyncMultiReaders {
-    #[allow(clippy::should_implement_trait)]
-    pub fn from_iter(iter: impl Iterator<Item = Box<dyn AsyncRead + Unpin>> + 'static) -> Self {
-        Self {
-            current: None,
-            iter: Box::new(iter),
-            buf: Vec::new(),
-            filled: 0,
-        }
-    }
-    pub fn from_vec<T: AsyncRead + Unpin + 'static>(vec: impl Into<Vec<T>>) -> Self {
-        let data: Vec<T> = vec.into();
-        Self::from_iter(
-            data.into_iter()
-                .map(|v| Box::new(v) as Box<dyn AsyncRead + Unpin>),
-        )
-    }
-}
-
-impl AsyncRead for AsyncMultiReaders {
+impl<T: AsyncRead + Unpin> AsyncRead for MultiReaders<T> {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
         ready!(buf.remaining());
+        if self.inner.len() == self.pos {
+            return Poll::Ready(Ok(()));
+        }
         let this = self.get_mut();
         if this.filled == 0 {
             this.buf = vec![0; buf.remaining()];
         }
 
         while this.filled < buf.remaining() {
-            if this.current.is_none() {
-                this.current = this.iter.next();
-            }
-            match &mut this.current {
-                Some(r) => {
-                    let mut tmp = ReadBuf::new(&mut this.buf[this.filled..]);
-                    match Pin::new(r).poll_read(cx, &mut tmp) {
-                        Poll::Ready(Ok(_)) => {
-                            this.filled += tmp.filled().len();
-                            // Read EOF
-                            if buf.remaining() > this.filled {
-                                this.current = None;
-                            }
+            if let Some(val) = this.inner.get_mut(this.pos) {
+                let mut tmp = ReadBuf::new(&mut this.buf[this.filled..]);
+                match Pin::new(val).poll_read(cx, &mut tmp) {
+                    Poll::Ready(Ok(_)) => {
+                        this.filled += tmp.filled().len();
+                        // Read EOF
+                        if buf.remaining() > this.filled {
+                            this.pos += 1;
                         }
-                        Poll::Ready(Err(e)) => {
-                            return Poll::Ready(Err(e));
-                        }
-                        Poll::Pending => return Poll::Pending,
                     }
+                    Poll::Ready(Err(e)) => {
+                        buf.put_slice(&this.buf[..this.filled]);
+                        this.buf.clear();
+                        this.filled = 0;
+                        return Poll::Ready(Err(e));
+                    }
+                    Poll::Pending => return Poll::Pending,
                 }
-                // EOF
-                _ => break,
+            } else {
+                break;
             }
         }
         buf.put_slice(&this.buf[..this.filled]);

@@ -1,2 +1,2 @@
 mod read;
-pub use read::*;
+mod seek;

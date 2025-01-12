@@ -1,36 +1,19 @@
 #[macro_export]
 macro_rules! wrap {
     (dyn $trait:ident, $($val:expr), +) => {
-        $crate::MultiReaders::new( vec![ $(Box::new($val) as Box<dyn $trait>), + ])
+        $crate::MultiReaders::new( [ $(Box::new($val) as Box<dyn $trait>), + ].into_iter())
     };
     ($($val:expr), +) => {
-        $crate::MultiReaders::new( vec![ $($val), + ])
+        $crate::MultiReaders::new( [ $($val), + ].into_iter())
     };
 }
+
 #[macro_export]
 macro_rules! open {
-    ($($path:expr), +) => {
-        $crate::wrap!($($crate::lazy_file::LazyFile::new($path)) , +)
+    (async $construct:expr, [$($path:expr), +]) => {
+        $crate::wrap!($($construct($path).await), +)
     };
-    (dyn $trait:ident, $($path:expr), +) => {
-        $crate::wrap!($($crate::lazy_file::LazyFile::new($path)) , +)
-    };
-}
-
-#[deprecated = "Use `wrap!` instead"]
-/// wrap multiple readers into a single
-#[macro_export]
-macro_rules! join_readers {
-    ($($r:expr), +) => {
-        $crate::wrap!(dyn ::std::io::Read, $($r), +)
-    };
-}
-
-#[cfg(feature = "async")]
-/// wrap multiple async readers into a single
-#[macro_export]
-macro_rules! join_async_readers {
-    ($($r:expr), +) => {
-        $crate::AsyncMultiReaders::from_iter(vec![$(Box::new($r) as Box<dyn tokio::io::AsyncRead + Unpin>, )+].into_iter())
+    ($construct:expr, [$($path:expr), +]) => {
+        $crate::wrap!($($construct($path)), +)
     };
 }
