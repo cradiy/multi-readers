@@ -12,7 +12,7 @@ fn main() -> std::io::Result<()> {
     assert_eq!(hello_world.as_str(), "Hello, World!");
     // Different types
     let r3 = Cursor::new(b" Rust!");
-    let mut readers = wrap!(dyn Read, r1, r2, r3);
+    let mut readers = wrap!(dyn std::io::Read, r1, r2, r3);
     let mut buf = String::new();
     readers.read_to_string(&mut buf)?;
     assert_eq!(buf.as_str(), "Hello, World! Rust!");
